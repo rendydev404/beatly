@@ -38,7 +38,7 @@ const activeSessions = new Map<string, { lastSeen: Date; events: string[] }>();
 const uniqueVisitors = new Set<string>();
 
 // Update data berdasarkan events yang diterima
-function updateAnalyticsData(eventType: string, details?: any) {
+function updateAnalyticsData(eventType: string) {
   const now = new Date();
   
   // Update real-time users (sessions yang aktif dalam 5 menit terakhir)
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
     }
     
     // Update analytics data
-    updateAnalyticsData(eventType, details);
+    updateAnalyticsData(eventType);
     
     return NextResponse.json({ 
       success: true, 

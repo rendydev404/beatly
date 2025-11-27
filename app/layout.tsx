@@ -9,7 +9,7 @@ import SplashScreen from "@/components/SplashScreen";
 import { useState, useEffect } from "react";
 import AIPlaylistGenerator from "@/components/AIPlaylistGenerator"; // Impor komponen AI
 import DevInfo from "@/components/DevInfo"; // Impor komponen DevInfo
-import GoogleAnalytics from "@/components/GoogleAnalytics"; // Impor Google Analytics
+import GoogleAnalytics from "@/components/GoogleAnalytics"; // Impor Google Analytics// Impor komponen GeminiDebug
 import Script from "next/script";
 
 export default function RootLayout({
@@ -188,7 +188,7 @@ export default function RootLayout({
           <PlayerProvider>
             <div className="flex h-full">
               <Sidebar />
-              <main className="flex-1 overflow-y-auto pb-32 md:pb-24">
+              <main className="flex-1 overflow-y-auto pb-32 md:pb-24 md:ml-[250px]">
                 {children}
               </main>
             </div>

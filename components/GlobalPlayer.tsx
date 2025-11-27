@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePlayer } from '@/app/context/PlayerContext';
 import { Play, Pause, LoaderCircle, SkipBack, SkipForward, Repeat, Repeat1 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRouter } from 'next/navigation';
 
 const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00';
@@ -19,6 +20,7 @@ export default function GlobalPlayer() {
     togglePlayPause, seek, playNext, playPrevious, repeatMode, toggleRepeatMode
   } = usePlayer();
   const { trackPlaySong } = useAnalytics();
+  const router = useRouter();
 
   if (!activeTrack) return null;
   const imageUrl = activeTrack.album.images?.[0]?.url;
@@ -38,13 +40,19 @@ export default function GlobalPlayer() {
         <div className="flex items-center justify-between w-full md:w-1/4 md:justify-start">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             {imageUrl && (
-              <div className="flex-shrink-0">
-                <Image 
-                  src={imageUrl} 
-                  alt={activeTrack.name} 
-                  width={56} 
-                  height={56} 
-                  className="rounded-md" 
+              <div
+                className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/track/${activeTrack.id}`);
+                }}
+              >
+                <Image
+                  src={imageUrl}
+                  alt={activeTrack.name}
+                  width={56}
+                  height={56}
+                  className="rounded-md"
                 />
               </div>
             )}

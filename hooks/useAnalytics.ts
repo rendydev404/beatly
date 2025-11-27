@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 
 // Generate unique session ID
 const generateSessionId = () => {
@@ -8,7 +8,7 @@ const generateSessionId = () => {
 // Get or create session ID
 const getSessionId = () => {
   if (typeof window === 'undefined') return null;
-  
+
   let sessionId = localStorage.getItem('analytics_session_id');
   if (!sessionId) {
     sessionId = generateSessionId();
@@ -20,9 +20,9 @@ const getSessionId = () => {
 // Track event to analytics dashboard
 export const trackEvent = async (eventType: string, details?: any) => {
   if (typeof window === 'undefined') return;
-  
+
   const sessionId = getSessionId();
-  
+
   try {
     await fetch('/api/analytics', {
       method: 'POST',
@@ -45,14 +45,14 @@ export const trackEvent = async (eventType: string, details?: any) => {
 export const useAnalytics = () => {
   const lastActivityRef = useRef<Date>(new Date());
   const activityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   useEffect(() => {
     // Track page view only once per page load
     trackEvent('page_view', {
       page: window.location.pathname,
       title: document.title
     });
-    
+
     // Track visibility change
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -61,14 +61,14 @@ export const useAnalytics = () => {
         trackEvent('page_blur');
       }
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     // Periodic activity tracking (every 2 minutes)
     activityTimeoutRef.current = setInterval(() => {
       trackEvent('user_activity');
     }, 120000); // 2 minutes
-    
+
     // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -77,7 +77,7 @@ export const useAnalytics = () => {
       }
     };
   }, []);
-  
+
   return {
     trackEvent,
     trackPageView: (page: string) => trackEvent('page_view', { page }),
@@ -88,4 +88,4 @@ export const useAnalytics = () => {
     trackProfileClick: () => trackEvent('profile_photo_click'),
     trackError: (error: string) => trackEvent('error', { error })
   };
-}; 
+};

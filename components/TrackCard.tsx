@@ -1,7 +1,6 @@
 // components/TrackCard.tsx
 import { Track } from "@/types";
-import { Play, Pause } from "lucide-react";
-import { event } from "./GoogleAnalytics";
+import { Play } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface TrackCardProps {
@@ -14,24 +13,10 @@ export default function TrackCard({ track, onPlay }: TrackCardProps) {
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation when clicking play button
-    // Track play event
-    event({
-      action: 'play_song',
-      category: 'music',
-      label: `${track.name} - ${track.artists?.[0]?.name || 'Unknown Artist'}`,
-      value: 1
-    });
     onPlay();
   };
 
   const handleCardClick = () => {
-    // Track navigation event
-    event({
-      action: 'navigate_to_track',
-      category: 'navigation',
-      label: `Navigated to track: ${track.name}`,
-      value: 1
-    });
     router.push(`/track/${track.id}`);
   };
 

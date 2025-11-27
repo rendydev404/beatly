@@ -34,7 +34,7 @@ export default function HomePage() {
     const getDiscoverTracks = async () => {
       setIsLoading(true);
       try {
-        const artists = ['Taylor Swift', 'James Arthur', 'Yovie & Nuno', 'Tulus'];
+        const artists = ['Taylor Swift', 'James Arthur', 'Yovie & Nuno', 'For Revenge'];
         const promises = artists.map(artist =>
           fetch(`/api/spotify?q=artist:${encodeURIComponent(artist)}&type=track&limit=5`).then(res => res.json())
         );
@@ -229,43 +229,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-gray-900">
-        <div className="max-w-6xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Fitur Unggulan
-            </h2>
-            <p className="text-gray-300 text-lg">
-              Platform musik streaming dengan teknologi terdepan
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-gray-800 p-6 rounded-xl hover:shadow-lg transition-all duration-300 group"
-              >
-                <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon size={24} className="text-white" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-3">{feature.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+      
       {/* Simple Footer */}
       <footer className="bg-black text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">

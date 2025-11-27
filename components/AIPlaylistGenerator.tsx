@@ -1,13 +1,12 @@
-// components/AIPlaylistGenerator.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { Sparkles, X, LoaderCircle } from "lucide-react";
 import { Track } from "@/types";
 import { usePlayer } from "@/app/context/PlayerContext";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion"; // Impor framer-motion
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AIPlaylistGenerator() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,29 +20,35 @@ export default function AIPlaylistGenerator() {
   const handleGeneratePlaylist = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Validasi input
     const trimmedPrompt = prompt.trim();
     if (!trimmedPrompt || isLoading) {
       setError("Mohon masukkan deskripsi playlist yang diinginkan");
       return;
     }
 
-    // Reset state dan mulai loading
     setIsLoading(true);
     setError("");
     
     console.log("Memulai generate playlist dengan prompt:", trimmedPrompt);
 
     try {
-      // Step 1: Get AI-generated search query
-      const geminiResponse = await fetch('/api/gemini', {
+      // Generate search query using Gemini
+      console.log("Calling Gemini API...");
+      const geminiResponse = await fetch('/api/gemini/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt: trimmedPrompt }),
       });
 
       if (!geminiResponse.ok) {
-        const errorData = await geminiResponse.json();
+        let errorData;
+        try {
+          errorData = await geminiResponse.json();
+        } catch (e) {
+          console.error('Error parsing response:', e);
+          errorData = { error: 'Failed to parse response' };
+        }
+        console.error('Gemini API error:', errorData);
         throw new Error(errorData.error || "Gagal mendapatkan respons dari AI.");
       }
 
@@ -52,13 +57,16 @@ export default function AIPlaylistGenerator() {
         throw new Error("AI tidak menghasilkan query yang valid.");
       }
 
-      // Step 2: Search tracks using the generated query
+      // Search tracks using the generated query
       const searchQuery = geminiData.query.trim().replace(/["']/g, "");
-      console.log("Generated search query:", searchQuery); // Untuk debugging
+      console.log("Generated search query:", searchQuery);
 
+      console.log("Calling Spotify API...");
       const spotifyResponse = await fetch(`/api/spotify?type=search&q=${encodeURIComponent(searchQuery)}`);
+      
       if (!spotifyResponse.ok) {
-        const errorData = await spotifyResponse.json();
+        const errorData = await spotifyResponse.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Spotify API error:', errorData);
         throw new Error(errorData.error || "Gagal mencari lagu di Spotify.");
       }
       
@@ -69,37 +77,22 @@ export default function AIPlaylistGenerator() {
         throw new Error("Tidak ada lagu yang cocok dengan kriteria tersebut.");
       }
 
-      // Jika ada tracks, buat playlist dan mainkan
-      const newPlaylistName = `AI Playlist: ${prompt}`;
+      console.log(`Found ${tracks.length} tracks`);
+
+      const newPlaylistName = `AI Playlist: ${trimmedPrompt}`;
       localStorage.setItem('my-playlist-name', newPlaylistName);
       localStorage.setItem('my-playlist', JSON.stringify(tracks));
       
       playSong(tracks[0], tracks, 0);
       router.push('/playlist');
       setIsOpen(false);
-      trackPlaylistGeneration(prompt);
+      trackPlaylistGeneration(trimmedPrompt);
 
     } catch (err) {
       console.error('Error detail:', err);
-      
-      let errorMessage = "Terjadi kesalahan tidak diketahui.";
-      
-      if (err instanceof Error) {
-        // Handle specific error messages
-        if (err.message.includes("AI")) {
-          errorMessage = "AI sedang mengalami gangguan. Silakan coba lagi dalam beberapa saat.";
-        } else if (err.message.includes("Spotify")) {
-          errorMessage = "Gagal mencari lagu. Mohon coba dengan kata kunci yang berbeda.";
-        } else if (err.message.includes("lagu yang cocok")) {
-          errorMessage = "Tidak menemukan lagu yang sesuai. Coba dengan deskripsi yang berbeda.";
-        } else {
-          errorMessage = err.message;
-        }
-      }
-      
+      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tidak diketahui.";
       setError(errorMessage);
       trackError(errorMessage);
-      
     } finally {
       setIsLoading(false);
     }
@@ -107,10 +100,10 @@ export default function AIPlaylistGenerator() {
 
   return (
     <>
-      {/* Tombol Mengambang (Floating Action Button) */}
-       <div className={`fixed right-4 md:right-8 z-[45] transition-all duration-300 ease-in-out
+      {/* Floating Button */}
+      <div className={`fixed right-4 md:right-8 z-[45] transition-all duration-300 ease-in-out
         ${activeTrack 
-          ? 'bottom-[10rem] md:bottom-24' // 1rem di atas player
+          ? 'bottom-[10rem] md:bottom-24'
           : 'bottom-20 md:bottom-8'
         }`
       }>
@@ -128,7 +121,7 @@ export default function AIPlaylistGenerator() {
         </motion.button>
       </div>
 
-      {/* AnimatePresence menangani animasi saat komponen muncul/hilang */}
+      {/* Modal */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -137,15 +130,14 @@ export default function AIPlaylistGenerator() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
             className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
-            onClick={() => setIsOpen(false)} // Menutup modal saat klik di luar
+            onClick={() => setIsOpen(false)}
           >
-            {/* Konten Modal dengan Animasi Muncul */}
             <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              onClick={(e) => e.stopPropagation()} // Mencegah penutupan modal saat klik di dalam
+              onClick={(e) => e.stopPropagation()}
               className="bg-zinc-900/80 border border-white/10 rounded-2xl p-6 w-full max-w-md relative text-white shadow-2xl"
             >
               <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
@@ -155,16 +147,24 @@ export default function AIPlaylistGenerator() {
                 <div className="bg-primary/20 p-2 rounded-lg">
                   <Sparkles className="text-primary" size={24}/>
                 </div>
-                <h2 className="text-xl font-bold">AI Playlist Generator</h2>
+                <h2 className="text-xl font-bold">AI Playlist Generator (BETA)</h2>
               </div>
-              <p className="text-sm text-zinc-400 mb-5">
-                Jelaskan suasana, genre, atau artis. Biarkan AI cerdas kami yang meracik playlist sempurna untukmu.
-              </p>
+              <div className="space-y-2 mb-5">
+                <p className="text-sm text-zinc-400">
+                  Jelaskan dengan detail lagu yang kamu inginkan. Semakin spesifik, semakin baik hasilnya.
+                </p>
+                <div className="text-xs text-zinc-500 space-y-1">
+                  <p>✨ Tips mendapatkan hasil terbaik:</p>
+                  <p>• Sebutkan genre: "lagu pop indonesia 2023"</p>
+                  <p>• Sebutkan artis: "lagu mirip Tulus yang romantis"</p>
+                  <p>• Sebutkan mood: "lagu semangat untuk workout"</p>
+                </div>
+              </div>
               <form onSubmit={handleGeneratePlaylist}>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="Contoh: lagu pop indo galau yang lagi viral..."
+                  placeholder="Contoh: lagu pop indonesia yang lagi hits..."
                   className="w-full bg-zinc-800 text-white placeholder-zinc-500 rounded-lg py-3 px-4 border-2 border-zinc-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                   rows={3}
                 />

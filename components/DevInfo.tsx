@@ -2,16 +2,15 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Github, 
-  Linkedin, 
-  Instagram, 
-  Mail, 
-  X, 
+import {
+  Github,
+  Linkedin,
+  Instagram,
+  Mail,
+  X,
   ExternalLink,
   User,
-  Sparkles,
-  Circle
+  Sparkles
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { usePlayer } from '@/app/context/PlayerContext';
@@ -120,7 +119,7 @@ export default function DevInfo() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <h2 className="text-base sm:text-lg font-bold text-white">Developer Info</h2>
+                <h2 className="text-base sm:text-lg font-bold text-white">Developer</h2>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-gray-800"
@@ -133,51 +132,49 @@ export default function DevInfo() {
               <div className="text-center mb-3 sm:mb-4">
                 <div className="relative inline-block mb-2 sm:mb-3">
                   <motion.div 
-                    className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden ring-2 ring-primary/30 cursor-pointer hover:ring-primary/50 transition-all duration-300"
+                    className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-2 ring-primary/30 cursor-pointer hover:ring-primary/50 transition-all duration-300"
                     onClick={handleImageClick}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <div className="relative w-16 h-16 flex items-center justify-center">
-                      {/* Ripple effects */}
-                      <motion.div
-                        className="absolute inset-0 rounded-full border border-primary/30"
-                        animate={{
-                          scale: [1, 1.5],
-                          opacity: [0.4, 0]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeOut"
-                        }}
-                      />
-                      <motion.div
-                        className="absolute inset-0 rounded-full border border-primary/30"
-                        animate={{
-                          scale: [1, 1.5],
-                          opacity: [0.3, 0]
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Infinity,
-                          ease: "easeOut",
-                          delay: 0.4
-                        }}
-                      />
-                      {/* Glowing border */}
-                      <div className="absolute inset-0 rounded-full border-2 border-as/50 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.3)]" />
+                    {/* Ripple effects */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full border border-primary/30"
+                      animate={{
+                        scale: [1, 1.5],
+                        opacity: [0.4, 0]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeOut"
+                      }}
+                    />
+                    <motion.div
+                      className="absolute inset-0 rounded-full border border-primary/30"
+                      animate={{
+                        scale: [1, 1.5],
+                        opacity: [0.3, 0]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeOut",
+                        delay: 0.4
+                      }}
+                    />
+                    {/* Glowing border */}
+                    <div className="absolute inset-0 rounded-full border-2 border-primary/50 shadow-[0_0_10px_rgba(var(--color-primary-rgb),0.3)]" />
+                    
+                    {/* Image container with proper sizing */}
+                    <div className="relative w-full h-full rounded-full overflow-hidden">
                       <Image
-                        src="/pp1.jpg"
+                        src="/pp.jpg"
                         alt="Rendy Irawan"
-                        width={64}
-                        height={64}
-                        className="rounded-full object-cover w-14 h-14 sm:w-16 sm:h-16 z-10"
+                        fill
+                        className="object-cover rounded-full"
+                        sizes="(max-width: 640px) 64px, 80px"
                       />
-                    </div>
-                    {/* Green Active Indicator with Blinking Effect */}
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center ring-2 ring-gray-900 animate-pulse">
-                      <Circle size={4} className="text-white fill-current" />
                     </div>
                   </motion.div>
                 </div>
@@ -299,9 +296,9 @@ export default function DevInfo() {
                   <Image
                     src={selectedImage}
                     alt="Developer"
-                    width={400}
-                    height={400}
-                    className="w-full h-full object-cover rounded-full relative z-0"
+                    fill
+                    className="object-cover rounded-full relative z-0"
+                    sizes="(max-width: 640px) 300px, 400px"
                   />
                 </div>
               </div>

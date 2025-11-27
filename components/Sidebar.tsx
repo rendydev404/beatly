@@ -17,7 +17,7 @@ const Sidebar = () => {
   return (
     <>
       {/* Bottom Bar for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 h-16 md:hidden z-30">
+      <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-zinc-800 h-16 md:hidden z-30" data-sidebar>
         <nav className="flex justify-around items-center h-full">
           {routes.map((item) => (
             <Link
@@ -33,7 +33,7 @@ const Sidebar = () => {
       </div>
 
       {/* Sidebar for Desktop */}
-      <div className="hidden md:flex flex-col gap-y-2 bg-black h-full w-[250px] p-2">
+      <div className="fixed hidden md:flex flex-col z-3 gap-y-2 bg-black h-full w-[250px] p-2" data-sidebar>
         <div className="bg-zinc-900 rounded-lg p-4 h-full">
           <nav className="flex flex-col gap-y-4">
             {routes.map((item) => (

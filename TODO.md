@@ -1,0 +1,3 @@
+- [x] Update Gemini model in app/api/gemini/generate/route.ts from 'gemini-pro' to 'gemini-1.5-flash'
+- [x] Adjust generationConfig for better performance (increase maxOutputTokens to 200)
+- [x] Test the AI Playlist Generator to ensure it works

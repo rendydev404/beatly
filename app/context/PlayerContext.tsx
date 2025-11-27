@@ -79,7 +79,13 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       setYoutubeVideoId(videoId);
       setIsPlaying(true);
     } else {
-      alert("Maaf, lagu tidak dapat ditemukan. Memainkan lagu berikutnya.");
+      console.error("Lagu tidak ditemukan:", track.name);
+      if (queue.length > 1) {
+        alert("Maaf, lagu tidak dapat ditemukan. Mencoba lagu berikutnya.");
+        playNext();
+      } else {
+        alert("Maaf, lagu tidak dapat ditemukan. Silakan coba lagu lain.");
+      }
       playNext();
     }
   };
