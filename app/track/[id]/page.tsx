@@ -1,6 +1,6 @@
 // app/track/[id]/page.tsx
 
-import { fetchSpotifyAPI } from "@/lib/spotify";
+import { fetchSpotifyAPI } from "@/lib/spotify-final";
 import { Track } from "@/types";
 import TrackDetailsClient from "@/components/TrackDetailsClient";
 

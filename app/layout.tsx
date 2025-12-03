@@ -7,6 +7,7 @@ import { PlayerProvider } from "@/app/context/PlayerContext";
 import GlobalPlayer from "@/components/GlobalPlayer";
 import SplashScreen from "@/components/SplashScreen";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import AIPlaylistGenerator from "@/components/AIPlaylistGenerator"; // Impor komponen AI
 import DevInfo from "@/components/DevInfo"; // Impor komponen DevInfo
 import GoogleAnalytics from "@/components/GoogleAnalytics"; // Impor Google Analytics// Impor komponen GeminiDebug
@@ -18,6 +19,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [showSplash, setShowSplash] = useState(true);
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith('/admin');
 
   useEffect(() => {
     // ... (logika untuk memuat tema tetap sama)
@@ -63,7 +66,7 @@ export default function RootLayout({
         <meta name="language" content="Indonesian" />
         <meta name="revisit-after" content="7 days" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://spotify-clone-by-rendydev.vercel.app/" />
@@ -72,34 +75,34 @@ export default function RootLayout({
         <meta property="og:image" content="https://spotify-clone-by-rendydev.vercel.app/spotify-logo.png" />
         <meta property="og:site_name" content="Spotify Clone Indonesia" />
         <meta property="og:locale" content="id_ID" />
-        
+
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content="https://spotify-clone-by-rendydev.vercel.app/" />
         <meta property="twitter:title" content="Spotify Clone - Musik Streaming Gratis Terbaik 2025" />
         <meta property="twitter:description" content="Platform musik streaming gratis terbaik 2025. Dengarkan lagu-lagu hits dari Taylor Swift, James Arthur, Yovie & Nuno, Tulus dan artis favorit lainnya." />
         <meta property="twitter:image" content="https://spotify-clone-by-rendydev.vercel.app/spotify-logo.png" />
-        
+
         {/* Additional SEO Meta Tags */}
         <meta name="theme-color" content="#1DB954" />
         <meta name="msapplication-TileColor" content="#1DB954" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Spotify Clone" />
-        
+
         {/* Canonical URL */}
         <link rel="canonical" href="https://spotify-clone-by-rendydev.vercel.app/" />
-        
+
         {/* Favicon */}
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/spotify-logo.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/spotify-logo.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/spotify-logo.png" />
-        
+
         {/* Preconnect for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
+
         {/* Structured Data for Rich Snippets */}
         <script
           type="application/ld+json"
@@ -144,7 +147,7 @@ export default function RootLayout({
             })
           }}
         />
-        
+
         {/* Organization Schema */}
         <script
           type="application/ld+json"
@@ -161,7 +164,7 @@ export default function RootLayout({
             })
           }}
         />
-        
+
         {/* Music Album Schema */}
         <script
           type="application/ld+json"
@@ -187,8 +190,8 @@ export default function RootLayout({
         ) : (
           <PlayerProvider>
             <div className="flex h-full">
-              <Sidebar />
-              <main className="flex-1 overflow-y-auto pb-32 md:pb-24 md:ml-[250px]">
+              {!isAdmin && <Sidebar />}
+              <main className={`flex-1 overflow-y-auto pb-32 md:pb-24 ${!isAdmin ? 'md:ml-[250px]' : ''}`}>
                 {children}
               </main>
             </div>
