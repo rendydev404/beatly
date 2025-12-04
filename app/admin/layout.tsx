@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Eye,
-    EyeOff
+    EyeOff,
+    CreditCard
 } from 'lucide-react';
 import Image from 'next/image';
 import spotifyLogo from "../../public/spotify-logo.png";
@@ -129,6 +130,7 @@ export default function AdminLayout({
     const navItems = [
         { name: 'API Management', href: '/admin', icon: LayoutDashboard },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart2 },
+        { name: 'Plans', href: '/admin/plans', icon: CreditCard },
     ];
 
     return (
@@ -159,8 +161,8 @@ export default function AdminLayout({
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
-                                            ? 'bg-primary text-white'
-                                            : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                        ? 'bg-primary text-white'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
                                         }`}
                                 >
                                     <item.icon size={20} />

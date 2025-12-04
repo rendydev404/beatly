@@ -13,6 +13,9 @@ import DevInfo from "@/components/DevInfo"; // Impor komponen DevInfo
 import GoogleAnalytics from "@/components/GoogleAnalytics"; // Impor Google Analytics// Impor komponen GeminiDebug
 import Script from "next/script";
 
+import Navbar from "@/components/Navbar"; // Impor Navbar
+import { ToastProvider } from "@/components/Toast"; // Impor ToastProvider
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
+        {/* ... existing head content ... */}
         {/* Google Analytics Script */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=G-L0V33E1LY5`}
@@ -188,18 +192,21 @@ export default function RootLayout({
         {showSplash ? (
           <SplashScreen onFinished={() => setShowSplash(false)} />
         ) : (
-          <PlayerProvider>
-            <div className="flex h-full">
-              {!isAdmin && <Sidebar />}
-              <main className={`flex-1 overflow-y-auto pb-32 md:pb-24 ${!isAdmin ? 'md:ml-[250px]' : ''}`}>
-                {children}
-              </main>
-            </div>
-            <AIPlaylistGenerator /> {/* Letakkan komponen di sini */}
-            <GlobalPlayer />
-            <DevInfo /> {/* Developer Info dengan floating icon */}
-            <GoogleAnalytics /> {/* Google Analytics tracking */}
-          </PlayerProvider>
+          <ToastProvider>
+            <PlayerProvider>
+              <div className="flex h-full">
+                {!isAdmin && <Sidebar />}
+                <main className={`flex-1 overflow-y-auto pb-32 md:pb-24 ${!isAdmin ? 'md:ml-[250px]' : ''} relative`}>
+                  {!isAdmin && <Navbar />}
+                  {children}
+                </main>
+              </div>
+              <AIPlaylistGenerator /> {/* Letakkan komponen di sini */}
+              <GlobalPlayer />
+              <DevInfo /> {/* Developer Info dengan floating icon */}
+              <GoogleAnalytics /> {/* Google Analytics tracking */}
+            </PlayerProvider>
+          </ToastProvider>
         )}
       </body>
     </html>

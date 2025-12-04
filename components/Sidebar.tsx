@@ -33,7 +33,7 @@ const Sidebar = () => {
       </div>
 
       {/* Sidebar for Desktop */}
-      <div className="fixed hidden md:flex flex-col z-3 gap-y-2 bg-black h-full w-[250px] p-2" data-sidebar>
+      <div className="fixed hidden md:flex flex-col z-30 gap-y-2 bg-black h-[calc(100vh-4rem)] w-[250px] p-2 top-16 left-0" data-sidebar>
         <div className="bg-zinc-900 rounded-lg p-4 h-full">
           <nav className="flex flex-col gap-y-4">
             {routes.map((item) => (

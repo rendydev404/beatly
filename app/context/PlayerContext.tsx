@@ -6,6 +6,10 @@ import { Track } from '@/types';
 import { searchYouTubeForSong } from '@/lib/youtube';
 import YouTubePlayer from '@/components/YouTubePlayer';
 import NowPlayingView from '@/components/NowPlayingView';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/components/Toast';
+import Modal from '@/components/Modal';
 
 type RepeatMode = 'none' | 'one' | 'all';
 
@@ -53,6 +57,10 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
   const [isNowPlayingViewOpen, setNowPlayingViewOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const router = useRouter();
+  const { showToast } = useToast();
 
   const playerRef = useRef<PlayerInstance | null>(null);
   const intervalRef = useRef<number | null>(null);
@@ -69,6 +77,28 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => { return () => stopTimer(); }, []);
 
   const loadAndPlaySong = async (track: Track) => {
+    // Check Auth
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    // Check Limit
+    try {
+      const res = await fetch('/api/usage/check', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await res.json();
+      if (!data.allowed) {
+        showToast(data.message, 'error');
+        router.push('/pricing');
+        return;
+      }
+    } catch (e) {
+      console.error('Error checking limit:', e);
+    }
+
     setIsLoading(true);
     setIsPlaying(false);
     setActiveTrack(track);
@@ -78,13 +108,23 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
     if (videoId) {
       setYoutubeVideoId(videoId);
       setIsPlaying(true);
+
+      // Increment Usage
+      try {
+        await fetch('/api/usage/increment', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+      } catch (e) {
+        console.error('Error incrementing usage:', e);
+      }
     } else {
       console.error("Lagu tidak ditemukan:", track.name);
       if (queue.length > 1) {
-        alert("Maaf, lagu tidak dapat ditemukan. Mencoba lagu berikutnya.");
+        showToast("Lagu tidak ditemukan. Mencoba lagu berikutnya.", 'info');
         playNext();
       } else {
-        alert("Maaf, lagu tidak dapat ditemukan. Silakan coba lagu lain.");
+        showToast("Maaf, lagu tidak dapat ditemukan.", 'error');
       }
       playNext();
     }
@@ -92,22 +132,22 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const playSong = (track: Track, newQueue: Track[] = [track], index: number = 0) => {
     if (activeTrack?.id === track.id) {
-        togglePlayPause();
-        return;
+      togglePlayPause();
+      return;
     }
     setQueue(newQueue);
     setCurrentIndex(index);
     loadAndPlaySong(track);
   };
-  
+
   const playNext = () => {
     if (queue.length === 0) return;
     const nextIndex = (currentIndex + 1);
     if (nextIndex >= queue.length && repeatMode !== 'all') {
-        setIsPlaying(false);
-        setActiveTrack(null);
-        setYoutubeVideoId(null);
-        return;
+      setIsPlaying(false);
+      setActiveTrack(null);
+      setYoutubeVideoId(null);
+      return;
     }
     const finalIndex = nextIndex % queue.length;
     setCurrentIndex(finalIndex);
@@ -127,16 +167,16 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const startRadio = async () => {
     if (!activeTrack || !activeTrack.artists[0]?.id) return;
-    
+
     console.log(`Memulai Radio berdasarkan artis: ${activeTrack.artists[0].name}`);
     setIsLoading(true);
 
     try {
       const res = await fetch(`/api/spotify?type=recommendations&seed_artists=${activeTrack.artists[0].id}&limit=10`);
       const data = await res.json();
-      
+
       const recommendedTracks = data.tracks || [];
-      
+
       if (recommendedTracks.length > 0) {
         const newQueue = [...queue.slice(0, currentIndex + 1), ...recommendedTracks];
         setQueue(newQueue);
@@ -183,7 +223,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       }
     }
   };
-  
+
   const toggleRepeatMode = () => setRepeatMode(prev => prev === 'none' ? 'all' : prev === 'all' ? 'one' : 'none');
   const togglePlayPause = () => { if (isPlaying) playerRef.current?.pauseVideo(); else playerRef.current?.playVideo(); };
   const seek = (time: number) => { playerRef.current?.seekTo(time, true); };
@@ -202,6 +242,33 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       {children}
       {isNowPlayingViewOpen && <NowPlayingView />}
       <YouTubePlayer videoId={youtubeVideoId} onReady={onPlayerReady} onStateChange={onPlayerStateChange} onError={onPlayerError} />
+
+      <Modal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        title="Login Diperlukan"
+      >
+        <div className="text-center">
+          <p className="text-gray-300 mb-6">Anda harus login untuk memutar lagu dan menikmati fitur premium.</p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="px-4 py-2 text-gray-400 hover:text-white"
+            >
+              Batal
+            </button>
+            <button
+              onClick={() => {
+                setShowLoginModal(false);
+                router.push('/login');
+              }}
+              className="bg-primary text-black px-6 py-2 rounded-full font-bold hover:scale-105 transition"
+            >
+              Login Sekarang
+            </button>
+          </div>
+        </div>
+      </Modal>
     </PlayerContext.Provider>
   );
 };

@@ -13,7 +13,7 @@ import { event } from "@/components/GoogleAnalytics";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const shuffleArray = (array: Track[]): Track[] => {
-  let currentIndex = array.length,  randomIndex;
+  let currentIndex = array.length, randomIndex;
   while (currentIndex !== 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
@@ -42,7 +42,7 @@ export default function HomePage() {
         const allTracks = results.flatMap(result => result.tracks?.items || []);
         const validTracks = allTracks.filter((track: Track) => track && track.album?.images?.length > 0);
         setDiscoverTracks(shuffleArray(validTracks));
-        
+
         // Track homepage load event
         event({
           action: 'homepage_loaded',
@@ -50,7 +50,7 @@ export default function HomePage() {
           label: 'Homepage loaded successfully',
           value: validTracks.length
         });
-        
+
         // Track to analytics dashboard
         trackEvent('homepage_loaded', { tracksCount: validTracks.length });
       } catch (error) {
@@ -63,11 +63,11 @@ export default function HomePage() {
   }, [trackEvent]);
 
   const scrollToSongCards = () => {
-    songCardsRef.current?.scrollIntoView({ 
+    songCardsRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'start'
     });
-    
+
     // Track scroll to songs event
     event({
       action: 'scroll_to_songs',
@@ -75,7 +75,7 @@ export default function HomePage() {
       label: 'User scrolled to song cards',
       value: 1
     });
-    
+
     // Track to analytics dashboard
     trackEvent('scroll_to_songs');
   };
@@ -88,10 +88,10 @@ export default function HomePage() {
       label: 'User navigated to search page',
       value: 1
     });
-    
+
     // Track to analytics dashboard
     trackEvent('navigate_to_search');
-    
+
     router.push('/search');
   };
 
@@ -103,10 +103,10 @@ export default function HomePage() {
       label: `${track.name} - ${track.artists?.[0]?.name || 'Unknown Artist'}`,
       value: 1
     });
-    
+
     // Track to analytics dashboard
     trackPlaySong(`${track.name} - ${track.artists?.[0]?.name || 'Unknown Artist'}`);
-    
+
     // Play the song
     playSong(track, tracks, index);
   };
@@ -122,10 +122,10 @@ export default function HomePage() {
       ))}
     </div>
   );
-  
+
   const SkeletonGrid = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-       {Array.from({ length: 12 }).map((_, i) => <TrackCardSkeleton key={i} />)}
+      {Array.from({ length: 12 }).map((_, i) => <TrackCardSkeleton key={i} />)}
     </div>
   );
 
@@ -153,7 +153,7 @@ export default function HomePage() {
   ];
 
   return (
-    <main className="bg-zinc-900 text-white min-h-screen p-0 md:p-0">
+    <main className="bg-zinc-900 text-white min-h-screen p-0 md:p-0 pt-16">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-purple-600 to-primary/80 overflow-hidden">
         {/* Background Pattern */}
@@ -162,7 +162,7 @@ export default function HomePage() {
           <div className="absolute top-40 right-20 w-24 h-24 bg-white rounded-full"></div>
           <div className="absolute bottom-20 left-1/3 w-16 h-16 bg-white rounded-full"></div>
         </div>
-        
+
         <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -229,7 +229,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      
+
       {/* Simple Footer */}
       <footer className="bg-black text-white py-8">
         <div className="max-w-6xl mx-auto px-4 text-center">

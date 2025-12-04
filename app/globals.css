@@ -30,3 +30,14 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom Animations */
+@keyframes pulse-bar {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.5); }
+}
+
+.animate-pulse-bar {
+  animation: pulse-bar 0.5s ease-in-out infinite;
+}
+
