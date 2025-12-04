@@ -8,7 +8,7 @@ export default function AuthErrorPage() {
             <div className="text-center max-w-md p-8">
                 <h1 className="text-4xl font-bold text-red-500 mb-4">Login Failed</h1>
                 <p className="text-gray-300 mb-8">
-                    We couldn't verify your login. This might happen if the login link expired or if there was a connection issue.
+                    We couldn&apos;t verify your login. This might happen if the login link expired or if there was a connection issue.
                 </p>
                 <Link
                     href="/login"

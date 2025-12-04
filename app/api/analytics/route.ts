@@ -40,11 +40,11 @@ const uniqueVisitors = new Set<string>();
 // Update data berdasarkan events yang diterima
 function updateAnalyticsData(eventType: string) {
   const now = new Date();
-  
+
   // Update real-time users (sessions yang aktif dalam 5 menit terakhir)
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
   let activeUsers = 0;
-  
+
   for (const [sessionId, session] of activeSessions.entries()) {
     if (session.lastSeen > fiveMinutesAgo) {
       activeUsers++;
@@ -53,7 +53,7 @@ function updateAnalyticsData(eventType: string) {
       activeSessions.delete(sessionId);
     }
   }
-  
+
   // Update metrics berdasarkan event type
   switch (eventType) {
     case 'page_view':
@@ -81,7 +81,7 @@ function updateAnalyticsData(eventType: string) {
       // Event tidak dikenal
       break;
   }
-  
+
   // Update top events
   const eventIndex = mockData.topEvents.findIndex(e => e.event === eventType);
   if (eventIndex !== -1) {
@@ -89,16 +89,16 @@ function updateAnalyticsData(eventType: string) {
   } else {
     mockData.topEvents.push({ event: eventType, count: 1 });
   }
-  
+
   // Update real-time users
   mockData.realTimeUsers = activeUsers;
-  
+
   // Update total visitors count
   mockData.totalVisitors = uniqueVisitors.size;
-  
+
   // Update last updated time
   mockData.lastUpdated = now.toISOString();
-  
+
   // Set as real data jika ada activity
   if (activeUsers > 0) {
     mockData.isRealData = true;
@@ -109,39 +109,39 @@ function updateAnalyticsData(eventType: string) {
 export async function GET() {
   // Simulasi data real-time dari Google Analytics
   // Dalam implementasi nyata, ini akan mengambil data dari Google Analytics API
-  
+
   // Update data berdasarkan events yang diterima
   const now = new Date();
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-  
+
   // Clean up old sessions
   for (const [sessionId, session] of activeSessions.entries()) {
     if (session.lastSeen < fiveMinutesAgo) {
       activeSessions.delete(sessionId);
     }
   }
-  
+
   // Update real-time users count
   mockData.realTimeUsers = activeSessions.size;
-  
+
   // Update total visitors count
   mockData.totalVisitors = uniqueVisitors.size;
-  
+
   // Simulasi beberapa events untuk demo
   if (Math.random() > 0.7) {
     const events = ['page_view', 'play_song', 'search_music', 'test_event'];
     const randomEvent = events[Math.floor(Math.random() * events.length)];
     updateAnalyticsData(randomEvent);
   }
-  
+
   return NextResponse.json(mockData);
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { eventType, sessionId, details } = body;
-    
+    const { eventType, sessionId } = body;
+
     // Track session
     if (sessionId) {
       const now = new Date();
@@ -157,21 +157,21 @@ export async function POST(request: Request) {
         uniqueVisitors.add(sessionId);
       }
     }
-    
+
     // Update analytics data
     updateAnalyticsData(eventType);
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       message: 'Event tracked successfully',
       realTimeUsers: activeSessions.size,
       totalVisitors: uniqueVisitors.size
     });
   } catch (error) {
     console.error('Analytics tracking error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to track event' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to track event'
     }, { status: 500 });
   }
-} 
+}

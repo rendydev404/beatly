@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     }
 
     // Use RPC to ensure subscription exists (bypassing RLS issues)
-    let { data: subscription, error: subError } = await supabase
+    const { data: subscription, error: subError } = await supabase
         .rpc('ensure_user_subscription', { target_user_id: user.id })
 
     if (subError || !subscription) {

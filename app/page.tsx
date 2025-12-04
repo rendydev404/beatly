@@ -5,7 +5,7 @@ import TrackCard from "@/components/TrackCard";
 import { TrackCardSkeleton } from "@/components/TrackCardSkeleton";
 import { Track } from "@/types";
 import { usePlayer } from "@/app/context/PlayerContext";
-import { Music, Search, Smartphone, Play, Sparkles } from "lucide-react";
+import { Search, Play } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -129,28 +129,7 @@ export default function HomePage() {
     </div>
   );
 
-  const features = [
-    {
-      title: "Musik Streaming Gratis",
-      description: "Akses jutaan lagu hits tanpa biaya. Nikmati musik berkualitas tinggi dengan player yang responsif.",
-      icon: Music,
-    },
-    {
-      title: "AI Playlist Generator",
-      description: "Buat playlist otomatis dengan AI canggih. Cukup berikan deskripsi, AI akan membuat playlist sesuai mood.",
-      icon: Sparkles,
-    },
-    {
-      title: "Search Musik Cepat",
-      description: "Temukan lagu favorit dengan mudah. Search engine yang powerful untuk mencari artis, album, dan lagu.",
-      icon: Search,
-    },
-    {
-      title: "Responsive Design",
-      description: "Akses dari mana saja - desktop, tablet, atau smartphone. Interface yang user-friendly di semua device.",
-      icon: Smartphone,
-    },
-  ];
+
 
   return (
     <main className="bg-zinc-900 text-white min-h-screen p-0 md:p-0 pt-16">
