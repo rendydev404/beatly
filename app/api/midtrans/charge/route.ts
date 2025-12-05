@@ -3,6 +3,20 @@ import { createClient } from '@supabase/supabase-js'
 // @ts-ignore
 import midtransClient from 'midtrans-client'
 
+interface MidtransAction {
+    name: string
+    url: string
+}
+
+interface MidtransResponse {
+    transaction_id: string
+    transaction_status: string
+    expiry_time?: string
+    actions?: MidtransAction[]
+    va_numbers?: { bank: string; va_number: string }[]
+    permata_va_number?: string
+}
+
 const core = new midtransClient.CoreApi({
     isProduction: false,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
@@ -66,7 +80,7 @@ export async function POST(req: Request) {
         const orderId = transaction.id
 
         // Build charge parameter based on payment type
-        let parameter: Record<string, unknown> = {
+        const parameter: Record<string, unknown> = {
             transaction_details: {
                 order_id: orderId,
                 gross_amount: price
@@ -76,7 +90,7 @@ export async function POST(req: Request) {
             }
         }
 
-        let chargeResponse
+        let chargeResponse: MidtransResponse
 
         try {
             switch (paymentType) {
@@ -145,7 +159,7 @@ export async function POST(req: Request) {
 
         // QRIS response
         if (paymentType === 'qris' && chargeResponse.actions) {
-            const qrAction = chargeResponse.actions.find((a: { name: string }) => a.name === 'generate-qr-code')
+            const qrAction = chargeResponse.actions.find(a => a.name === 'generate-qr-code')
             if (qrAction) {
                 response.qrCodeUrl = qrAction.url
             }
@@ -153,8 +167,8 @@ export async function POST(req: Request) {
 
         // GoPay response
         if (paymentType === 'gopay' && chargeResponse.actions) {
-            const qrAction = chargeResponse.actions.find((a: { name: string }) => a.name === 'generate-qr-code')
-            const deepLinkAction = chargeResponse.actions.find((a: { name: string }) => a.name === 'deeplink-redirect')
+            const qrAction = chargeResponse.actions.find(a => a.name === 'generate-qr-code')
+            const deepLinkAction = chargeResponse.actions.find(a => a.name === 'deeplink-redirect')
             if (qrAction) {
                 response.qrCodeUrl = qrAction.url
             }
@@ -165,7 +179,7 @@ export async function POST(req: Request) {
 
         // ShopeePay response
         if (paymentType === 'shopeepay' && chargeResponse.actions) {
-            const deepLinkAction = chargeResponse.actions.find((a: { name: string }) => a.name === 'deeplink-redirect')
+            const deepLinkAction = chargeResponse.actions.find(a => a.name === 'deeplink-redirect')
             if (deepLinkAction) {
                 response.deepLinkUrl = deepLinkAction.url
             }
