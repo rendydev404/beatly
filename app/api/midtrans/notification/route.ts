@@ -20,9 +20,10 @@ export async function POST(req: Request) {
 
         console.log(`Transaction notification received. Order ID: ${orderId}. Transaction status: ${transactionStatus}. Fraud status: ${fraudStatus}`)
 
-        const supabase = createClient(
+        // Use SERVICE_ROLE_KEY for webhooks to bypass RLS
+        const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 auth: {
                     persistSession: false,
@@ -31,13 +32,6 @@ export async function POST(req: Request) {
                 }
             }
         )
-
-        // We need service role key to update other users' data securely if RLS blocks it, 
-        // but for now we will try with anon key if policies allow or if we had service key.
-        // Ideally use SERVICE_ROLE_KEY for webhooks.
-        // Since I don't have SERVICE_ROLE_KEY in env yet, I'll assume RLS allows update based on transaction ID or I'll add a note.
-        // Actually, for webhooks, we usually need admin privileges. 
-        // I will assume the user will add SUPABASE_SERVICE_ROLE_KEY to env if needed, but for now let's try to update.
 
         let newStatus = 'pending'
 
@@ -56,7 +50,7 @@ export async function POST(req: Request) {
         }
 
         // Update transaction status
-        const { data: transaction, error: txError } = await supabase
+        const { data: transaction, error: txError } = await supabaseAdmin
             .from('transactions')
             .update({ status: newStatus })
             .eq('id', orderId)
@@ -70,20 +64,51 @@ export async function POST(req: Request) {
 
         // If success, update user subscription
         if (newStatus === 'success' && transaction) {
-            await supabase
+            // Get the plan_id from transaction (it's stored as 'plus' or 'pro')
+            const planIdMap: { [key: string]: string } = {
+                'plus': 'plus',
+                'pro': 'pro',
+                'free': 'free'
+            }
+
+            const planId = planIdMap[transaction.plan_id] || transaction.plan_id
+
+            // Check if user has a subscription
+            const { data: existingSub } = await supabaseAdmin
                 .from('user_subscriptions')
-                .update({
-                    plan_id: transaction.plan_id,
-                    // Reset usage on upgrade? Optional. Let's say yes.
-                    // daily_usage: 0 
-                })
+                .select('*')
                 .eq('user_id', transaction.user_id)
+                .single()
+
+            if (existingSub) {
+                // Update existing subscription
+                await supabaseAdmin
+                    .from('user_subscriptions')
+                    .update({
+                        plan_id: planId,
+                        daily_usage: 0, // Reset usage on upgrade
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('user_id', transaction.user_id)
+            } else {
+                // Create new subscription
+                await supabaseAdmin
+                    .from('user_subscriptions')
+                    .insert({
+                        user_id: transaction.user_id,
+                        plan_id: planId,
+                        daily_usage: 0
+                    })
+            }
+
+            console.log(`Subscription updated for user ${transaction.user_id} to plan ${planId}`)
         }
 
         return NextResponse.json({ status: 'OK' })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Midtrans Notification Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }

@@ -13,9 +13,6 @@ export async function POST(req: Request) {
     try {
         const { planId, price } = await req.json()
 
-        // Get user from auth header or session
-        // For simplicity, we'll assume the client sends the user ID or we get it from session
-        // Better to get from session for security
         const supabase = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -34,8 +31,21 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
+        // Use service role for database operations
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false
+                }
+            }
+        )
+
         // Create a transaction record in DB (pending)
-        const { data: transaction, error: txError } = await supabase
+        const { data: transaction, error: txError } = await supabaseAdmin
             .from('transactions')
             .insert({
                 user_id: user.id,
@@ -65,15 +75,19 @@ export async function POST(req: Request) {
         const transactionToken = await snap.createTransaction(parameter)
 
         // Update transaction with token
-        await supabase
+        await supabaseAdmin
             .from('transactions')
             .update({ snap_token: transactionToken.token })
             .eq('id', transaction.id)
 
-        return NextResponse.json({ token: transactionToken.token })
+        return NextResponse.json({
+            token: transactionToken.token,
+            transactionId: transaction.id
+        })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Midtrans Error:', error)
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
 }
