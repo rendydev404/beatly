@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
-import { LogOut, User as UserIcon, ChevronDown, Search, Crown, X, Zap } from 'lucide-react';
+import { LogOut, User as UserIcon, ChevronDown, Search, Crown, X, Zap, History } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Track } from '@/types';
@@ -437,6 +437,28 @@ export default function Navbar() {
                                             {upgradeButton.text}
                                         </Link>
                                     )}
+
+                                    {/* Profile Link */}
+                                    <Link
+                                        href="/profile"
+                                        className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        <UserIcon size={14} />
+                                        Profil Saya
+                                    </Link>
+
+                                    {/* Listening History Link */}
+                                    <Link
+                                        href="/profile#history"
+                                        className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                                        onClick={() => setIsDropdownOpen(false)}
+                                    >
+                                        <History size={14} />
+                                        Riwayat Diputar
+                                    </Link>
+
+                                    <div className="border-t border-white/10 my-1"></div>
 
                                     <button
                                         onClick={handleLogout}

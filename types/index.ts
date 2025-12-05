@@ -5,8 +5,17 @@ export interface SpotifyImage {
 }
 
 export interface Artist {
-   id: string;
+  id: string;
   name: string;
+}
+
+export interface ArtistFull {
+  id: string;
+  name: string;
+  images: SpotifyImage[];
+  genres?: string[];
+  popularity?: number;
+  followers?: { total: number };
 }
 
 export interface Album {

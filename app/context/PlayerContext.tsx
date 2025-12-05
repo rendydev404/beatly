@@ -118,6 +118,26 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error('Error incrementing usage:', e);
       }
+
+      // Record to listening history
+      try {
+        await fetch('/api/history/add', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            track_id: track.id,
+            track_name: track.name,
+            artist_name: track.artists[0]?.name || 'Unknown Artist',
+            album_name: track.album?.name || null,
+            album_image: track.album?.images?.[0]?.url || null
+          })
+        });
+      } catch (e) {
+        console.error('Error recording to history:', e);
+      }
     } else {
       console.error("Lagu tidak ditemukan:", track.name);
       if (queue.length > 1) {
