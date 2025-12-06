@@ -254,7 +254,7 @@ export default function Navbar() {
                                 alt="User Avatar"
                                 width={28}
                                 height={28}
-                                className="rounded-full"
+                                className="rounded-full w-7 h-7 object-cover"
                             />
                         ) : (
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center ${isPro ? 'bg-gradient-to-br from-amber-500 to-yellow-400' :

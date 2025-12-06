@@ -156,20 +156,19 @@ export async function PUT(request: NextRequest) {
                 return NextResponse.json({ error: 'File too large. Maximum 5MB.' }, { status: 400 })
             }
 
-            // Generate unique filename
-            const ext = avatar.name.split('.').pop() || 'jpg'
-            const fileName = `${user.id}/${Date.now()}.${ext}`
+            // Generate filename - use consistent name to overwrite
+            const ext = avatar.name.split('.').pop()?.toLowerCase() || 'jpg'
+            const fileName = `${user.id}/avatar.${ext}`
 
             // Convert to buffer
             const arrayBuffer = await avatar.arrayBuffer()
             const buffer = new Uint8Array(arrayBuffer)
 
-            // Check if bucket exists, if not provide helpful error
+            // Check if bucket exists, if not create it
             const { data: buckets } = await supabaseClient.storage.listBuckets()
             const avatarBucketExists = buckets?.some(b => b.name === 'avatars')
 
             if (!avatarBucketExists) {
-                // Try to create the bucket
                 const { error: createBucketError } = await supabaseClient.storage.createBucket('avatars', {
                     public: true,
                     fileSizeLimit: 5242880 // 5MB
@@ -183,7 +182,19 @@ export async function PUT(request: NextRequest) {
                 }
             }
 
-            // Upload to Supabase Storage
+            // Delete all old avatar files in user folder to save storage
+            const { data: existingFiles } = await supabaseClient.storage
+                .from('avatars')
+                .list(user.id)
+
+            if (existingFiles && existingFiles.length > 0) {
+                const filesToDelete = existingFiles.map(f => `${user.id}/${f.name}`)
+                await supabaseClient.storage
+                    .from('avatars')
+                    .remove(filesToDelete)
+            }
+
+            // Upload new avatar
             const { data: uploadData, error: uploadError } = await supabaseClient.storage
                 .from('avatars')
                 .upload(fileName, buffer, {
@@ -198,12 +209,13 @@ export async function PUT(request: NextRequest) {
                 }, { status: 500 })
             }
 
-            // Get public URL
+            // Get public URL with cache buster to force refresh
             const { data: { publicUrl } } = supabaseClient.storage
                 .from('avatars')
                 .getPublicUrl(uploadData.path)
 
-            updates.avatar_url = publicUrl
+            // Add timestamp to URL to bust cache
+            updates.avatar_url = `${publicUrl}?t=${Date.now()}`
         }
 
         // Handle name update

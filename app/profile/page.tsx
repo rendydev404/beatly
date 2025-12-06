@@ -344,49 +344,88 @@ export default function ProfilePage() {
 
                     {/* User Info */}
                     <div className="text-center md:text-left flex-1">
-                        {/* Editable Name */}
-                        {isEditingName ? (
-                            <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
-                                <input
-                                    type="text"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-primary"
-                                    autoFocus
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') handleNameSave()
-                                        if (e.key === 'Escape') handleNameCancel()
-                                    }}
-                                />
-                                <button
-                                    onClick={handleNameSave}
-                                    disabled={isUploading}
-                                    className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
-                                >
-                                    {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-                                </button>
-                                <button
-                                    onClick={handleNameCancel}
-                                    className="p-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
-                                <h1 className="text-2xl md:text-3xl font-bold">
-                                    {profile.user.full_name || profile.user.email.split('@')[0]}
-                                </h1>
-                                <button
-                                    onClick={handleNameEdit}
-                                    className="p-2 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
-                                    title="Edit nama"
-                                >
-                                    <Pencil className="w-4 h-4" />
-                                </button>
-                            </div>
-                        )}
+                        {/* Name with Edit Button */}
+                        <div className="flex items-center gap-3 mb-2 justify-center md:justify-start">
+                            <h1 className="text-2xl md:text-3xl font-bold">
+                                {profile.user.full_name || profile.user.email.split('@')[0]}
+                            </h1>
+                            <button
+                                onClick={handleNameEdit}
+                                className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
+                                title="Edit nama"
+                            >
+                                <Pencil className="w-4 h-4" />
+                            </button>
+                        </div>
                         <p className="text-gray-400 mb-3">{profile.user.email}</p>
+
+                        {/* Edit Name Modal */}
+                        {isEditingName && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                                onClick={handleNameCancel}
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Pencil className="w-5 h-5 text-primary" />
+                                        Edit Nama Profil
+                                    </h3>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm text-gray-400 mb-2">
+                                                Nama Lengkap
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={editName}
+                                                onChange={(e) => setEditName(e.target.value)}
+                                                placeholder="Masukkan nama lengkap"
+                                                className="w-full bg-zinc-800 border border-zinc-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                                                autoFocus
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleNameSave()
+                                                    if (e.key === 'Escape') handleNameCancel()
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-3 pt-2">
+                                            <button
+                                                onClick={handleNameCancel}
+                                                className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-medium transition-colors"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                onClick={handleNameSave}
+                                                disabled={isUploading || !editName.trim()}
+                                                className="flex-1 px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            >
+                                                {isUploading ? (
+                                                    <>
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Menyimpan...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Check className="w-4 h-4" />
+                                                        Simpan
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
 
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                             {/* Plan Badge */}
