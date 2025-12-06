@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { motion } from 'framer-motion'
@@ -17,7 +17,11 @@ import {
     Play,
     Loader2,
     ArrowLeft,
-    TrendingUp
+    TrendingUp,
+    Camera,
+    Pencil,
+    Check,
+    X
 } from 'lucide-react'
 import { usePlayer } from '@/app/context/PlayerContext'
 import { Track } from '@/types'
@@ -73,8 +77,88 @@ export default function ProfilePage() {
     const [history, setHistory] = useState<HistoryItem[]>([])
     const [loading, setLoading] = useState(true)
     const [historyLoading, setHistoryLoading] = useState(true)
+    const [isEditingName, setIsEditingName] = useState(false)
+    const [editName, setEditName] = useState('')
+    const [isUploading, setIsUploading] = useState(false)
+    const fileInputRef = React.useRef<HTMLInputElement>(null)
     const router = useRouter()
     const { playSong } = usePlayer()
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        await updateProfile(file, null)
+    }
+
+    const handleNameEdit = () => {
+        if (profile) {
+            setEditName(profile.user.full_name || profile.user.email.split('@')[0])
+            setIsEditingName(true)
+        }
+    }
+
+    const handleNameSave = async () => {
+        if (editName.trim()) {
+            await updateProfile(null, editName.trim())
+            setIsEditingName(false)
+        }
+    }
+
+    const handleNameCancel = () => {
+        setIsEditingName(false)
+        setEditName('')
+    }
+
+    const updateProfile = async (avatar: File | null, fullName: string | null) => {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+
+        setIsUploading(true)
+        try {
+            const formData = new FormData()
+            if (avatar) {
+                formData.append('avatar', avatar)
+            }
+            if (fullName) {
+                formData.append('full_name', fullName)
+            }
+
+            const res = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: formData
+            })
+
+            if (res.ok) {
+                const result = await res.json()
+                // Update local state
+                if (profile) {
+                    setProfile({
+                        ...profile,
+                        user: {
+                            ...profile.user,
+                            avatar_url: result.updates.avatar_url || profile.user.avatar_url,
+                            full_name: result.updates.full_name || profile.user.full_name
+                        }
+                    })
+                }
+            } else {
+                const error = await res.json()
+                console.error('Update failed:', error)
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error)
+        } finally {
+            setIsUploading(false)
+        }
+    }
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -206,20 +290,42 @@ export default function ProfilePage() {
                     className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-12"
                 >
                     {/* Avatar */}
-                    <div className="relative">
+                    <div className="relative group cursor-pointer" onClick={handleAvatarClick}>
+                        {/* Hidden file input */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+
                         {profile.user.avatar_url ? (
                             <Image
                                 src={profile.user.avatar_url}
                                 alt="Profile"
                                 width={120}
                                 height={120}
-                                className="rounded-full border-4 border-primary/30"
+                                className="rounded-full border-4 border-primary/30 w-28 h-28 md:w-32 md:h-32 object-cover"
                             />
                         ) : (
                             <div className="w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-4xl md:text-5xl font-bold border-4 border-primary/30">
                                 {getInitials(profile.user.email)}
                             </div>
                         )}
+
+                        {/* Upload overlay */}
+                        <div className={`absolute inset-0 rounded-full bg-black/60 flex flex-col items-center justify-center transition-opacity ${isUploading ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                            {isUploading ? (
+                                <Loader2 className="w-8 h-8 animate-spin text-white" />
+                            ) : (
+                                <>
+                                    <Camera className="w-6 h-6 text-white mb-1" />
+                                    <span className="text-xs text-white">Ganti Foto</span>
+                                </>
+                            )}
+                        </div>
+
                         {/* Plan Badge on Avatar */}
                         <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full ${planColors[profile.subscription.plan_id]} flex items-center justify-center shadow-lg`}>
                             <PlanIcon className="w-5 h-5" />
@@ -228,9 +334,48 @@ export default function ProfilePage() {
 
                     {/* User Info */}
                     <div className="text-center md:text-left flex-1">
-                        <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                            {profile.user.full_name || profile.user.email.split('@')[0]}
-                        </h1>
+                        {/* Editable Name */}
+                        {isEditingName ? (
+                            <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
+                                <input
+                                    type="text"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    className="bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-primary"
+                                    autoFocus
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleNameSave()
+                                        if (e.key === 'Escape') handleNameCancel()
+                                    }}
+                                />
+                                <button
+                                    onClick={handleNameSave}
+                                    disabled={isUploading}
+                                    className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                    {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                                </button>
+                                <button
+                                    onClick={handleNameCancel}
+                                    className="p-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
+                                <h1 className="text-2xl md:text-3xl font-bold">
+                                    {profile.user.full_name || profile.user.email.split('@')[0]}
+                                </h1>
+                                <button
+                                    onClick={handleNameEdit}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
+                                    title="Edit nama"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                </button>
+                            </div>
+                        )}
                         <p className="text-gray-400 mb-3">{profile.user.email}</p>
 
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">

@@ -115,3 +115,107 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 }
+
+export async function PUT(request: NextRequest) {
+    try {
+        // Get auth token from header
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+
+        const token = authHeader.replace('Bearer ', '')
+
+        // Create client with service key
+        const supabaseClient = createClient(supabaseUrl, supabaseServiceKey)
+
+        // Get user from token
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+
+        if (authError || !user) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+        }
+
+        // Parse form data
+        const formData = await request.formData()
+        const avatar = formData.get('avatar') as File | null
+        const fullName = formData.get('full_name') as string | null
+
+        const updates: { avatar_url?: string; full_name?: string } = {}
+
+        // Handle avatar upload
+        if (avatar && avatar.size > 0) {
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+            if (!allowedTypes.includes(avatar.type)) {
+                return NextResponse.json({ error: 'Invalid file type. Use JPEG, PNG, WebP, or GIF.' }, { status: 400 })
+            }
+
+            // Validate file size (max 5MB)
+            if (avatar.size > 5 * 1024 * 1024) {
+                return NextResponse.json({ error: 'File too large. Maximum 5MB.' }, { status: 400 })
+            }
+
+            // Generate unique filename
+            const ext = avatar.name.split('.').pop() || 'jpg'
+            const fileName = `${user.id}/${Date.now()}.${ext}`
+
+            // Convert to buffer
+            const arrayBuffer = await avatar.arrayBuffer()
+            const buffer = new Uint8Array(arrayBuffer)
+
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                .from('avatars')
+                .upload(fileName, buffer, {
+                    contentType: avatar.type,
+                    upsert: true
+                })
+
+            if (uploadError) {
+                console.error('Avatar upload error:', uploadError)
+                return NextResponse.json({ error: 'Failed to upload avatar' }, { status: 500 })
+            }
+
+            // Get public URL
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('avatars')
+                .getPublicUrl(uploadData.path)
+
+            updates.avatar_url = publicUrl
+        }
+
+        // Handle name update
+        if (fullName !== null && fullName.trim() !== '') {
+            updates.full_name = fullName.trim()
+        }
+
+        // Update user metadata if there are changes
+        if (Object.keys(updates).length > 0) {
+            const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+                user.id,
+                {
+                    user_metadata: {
+                        ...user.user_metadata,
+                        ...updates
+                    }
+                }
+            )
+
+            if (updateError) {
+                console.error('User update error:', updateError)
+                return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            updates,
+            message: 'Profile updated successfully'
+        })
+
+    } catch (error) {
+        console.error('Profile update error:', error)
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
+}
