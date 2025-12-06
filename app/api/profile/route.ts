@@ -164,6 +164,25 @@ export async function PUT(request: NextRequest) {
             const arrayBuffer = await avatar.arrayBuffer()
             const buffer = new Uint8Array(arrayBuffer)
 
+            // Check if bucket exists, if not provide helpful error
+            const { data: buckets } = await supabaseClient.storage.listBuckets()
+            const avatarBucketExists = buckets?.some(b => b.name === 'avatars')
+
+            if (!avatarBucketExists) {
+                // Try to create the bucket
+                const { error: createBucketError } = await supabaseClient.storage.createBucket('avatars', {
+                    public: true,
+                    fileSizeLimit: 5242880 // 5MB
+                })
+
+                if (createBucketError) {
+                    console.error('Failed to create avatars bucket:', createBucketError)
+                    return NextResponse.json({
+                        error: 'Storage bucket "avatars" does not exist. Please create it in Supabase Dashboard → Storage with public access enabled.'
+                    }, { status: 500 })
+                }
+            }
+
             // Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabaseClient.storage
                 .from('avatars')
@@ -174,7 +193,9 @@ export async function PUT(request: NextRequest) {
 
             if (uploadError) {
                 console.error('Avatar upload error:', uploadError)
-                return NextResponse.json({ error: 'Failed to upload avatar' }, { status: 500 })
+                return NextResponse.json({
+                    error: `Failed to upload avatar: ${uploadError.message}`
+                }, { status: 500 })
             }
 
             // Get public URL

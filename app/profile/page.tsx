@@ -149,12 +149,22 @@ export default function ProfilePage() {
                         }
                     })
                 }
+
+                // Refresh session to update user metadata across the app (including navbar)
+                await supabase.auth.refreshSession()
+
+                // Dispatch custom event for navbar to update
+                window.dispatchEvent(new CustomEvent('profile-updated', {
+                    detail: result.updates
+                }))
             } else {
                 const error = await res.json()
                 console.error('Update failed:', error)
+                alert(error.error || 'Gagal update profile')
             }
         } catch (error) {
             console.error('Error updating profile:', error)
+            alert('Terjadi kesalahan saat update profile')
         } finally {
             setIsUploading(false)
         }

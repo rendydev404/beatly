@@ -92,7 +92,20 @@ export default function Navbar() {
             }
         });
 
-        return () => subscription.unsubscribe();
+        // Listen for profile updates to refresh user data
+        const handleProfileUpdate = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setUser(session.user);
+            }
+        };
+
+        window.addEventListener('profile-updated', handleProfileUpdate);
+
+        return () => {
+            subscription.unsubscribe();
+            window.removeEventListener('profile-updated', handleProfileUpdate);
+        };
     }, [fetchUserPlan]);
 
     // Cleanup abort controller on unmount
