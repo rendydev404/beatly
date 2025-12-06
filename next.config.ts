@@ -57,6 +57,13 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Supabase Storage for avatar images
+      {
+        protocol: 'https',
+        hostname: 'bpzzgyhjjlylhhizbdva.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   // Hide admin pages from sitemap generation
